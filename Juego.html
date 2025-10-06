@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador Cósmico</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Orbitron:wght@700&display=swap');
+
+        :root {
+            --primary-color: #0c0f1a;
+            --secondary-color: #1a2238;
+            --accent-color: #00ffff; /* Cyan */
+            --highlight-color: #f4d35e; /* Gold */
+            --text-color: #f0f8ff;
+            --success-color: #50fa7b;
+            --error-color: #ff5555;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: 'Roboto Mono', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: var(--secondary-color);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 700px;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-color);
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px var(--accent-color);
+        }
+        
+        #info-display {
+            display: flex;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--highlight-color);
+            margin-bottom: 1.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #1a2238;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        #mision-nombre {
+            color: var(--text-color);
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            height: 30px;
+        }
+
+        #problema {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--primary-color);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 1.8rem;
+            color: var(--highlight-color);
+        }
+
+        input[type="text"] {
+            background-color: var(--primary-color);
+            border: 2px solid var(--accent-color);
+            color: var(--text-color);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            border-radius: 4px;
+            width: 120px;
+            padding: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 5px;
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0.5rem;
+        }
+
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        #siguiente-btn {
+            display: none;
+            background-color: var(--success-color);
+        }
+        #reiniciar-btn { display: none; }
+        
+        #feedback {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            height: 30px;
+            font-weight: bold;
+        }
+
+        .feedback-correct { color: var(--success-color); }
+        .feedback-incorrect { color: var(--error-color); }
+        
+        .progress-bar-container {
+            width: 100%;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #1a2238;
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 20px;
+            background: linear-gradient(90deg, #00ffff, #f4d35e);
+            border-radius: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Explorador Cósmico</h1>
+
+        <div id="info-display">
+            <span id="score">Calificación: 0 / 10</span>
+        </div>
+        
+        <div class="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
+        
+        <h3 id="mision-nombre"></h3>
+        <div id="problema"></div>
+        
+        <div id="input-area"></div>
+        
+        <div class="controls">
+            <button id="verificar-btn">Calcular</button>
+            <button id="siguiente-btn">Siguiente Misión</button>
+            <button id="reiniciar-btn">Nueva Simulación</button>
+        </div>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const toScientific = (num) => {
+            const sci = num.toExponential(1).replace('e', 'x10^');
+            return sci;
+        };
+
+        const misiones = [
+            {
+                nombre: "Misión 1: Medición de Planetas (Números Grandes)",
+                generator: () => {
+                    const coefficient = randInt(11, 99) / 10; // e.g., 5.8
+                    const exponent = randInt(4, 8);
+                    const number = coefficient * Math.pow(10, exponent);
+                    return {
+                        problema: `Expresa la medida ${number.toLocaleString('es')} en notación científica.`,
+                        inputHTML: `<div class="input-group"><input type="text" id="coeff"> x 10^<input type="text" id="exp"></div>`,
+                        verificar: () => {
+                            const userCoeff = parseFloat(document.getElementById('coeff').value);
+                            const userExp = parseInt(document.getElementById('exp').value);
+                            return userCoeff === coefficient && userExp === exponent;
+                        }
+                    };
+                }
+            },
+            {
+                nombre: "Misión 2: Análisis Microscópico (Números Pequeños)",
+                generator: () => {
+                    const coefficient = randInt(11, 99) / 10; // e.g., 4.5
+                    const exponent = -randInt(3, 7);
+                    const number = coefficient * Math.pow(10, exponent);
+                    return {
+                        problema: `Expresa la medida ${number.toFixed(10)} en notación científica.`,
+                        inputHTML: `<div class="input-group"><input type="text" id="coeff"> x 10^<input type="text" id="exp"></div>`,
+                        verificar: () => {
+                            const userCoeff = parseFloat(document.getElementById('coeff').value);
+                            const userExp = parseInt(document.getElementById('exp').value);
+                            return userCoeff === coefficient && userExp === exponent;
+                        }
+                    };
+                }
+            },
+            {
+                nombre: "Misión 3: Multiplicación Cósmica",
+                generator: () => {
+                    const c1 = randInt(2, 4); const e1 = randInt(3, 5);
+                    const c2 = randInt(2, 4); const e2 = randInt(3, 5);
+                    const resCoeff = c1 * c2;
+                    const resExp = e1 + e2;
+                    return {
+                        problema: `Calcula: (${c1} x 10^${e1}) * (${c2} x 10^${e2})`,
+                        inputHTML: `<div class="input-group"><input type="text" id="coeff"> x 10^<input type="text" id="exp"></div>`,
+                        verificar: () => {
+                            const userCoeff = parseFloat(document.getElementById('coeff').value);
+                            const userExp = parseInt(document.getElementById('exp').value);
+                            return userCoeff === resCoeff && userExp === resExp;
+                        }
+                    };
+                }
+            },
+            {
+                nombre: "Misión 4: División de Órbitas",
+                generator: () => {
+                    const c2 = randInt(2, 4); const e2 = randInt(3, 5);
+                    const c1 = c2 * randInt(2, 5); const e1 = e2 + randInt(2, 5);
+                    const resCoeff = c1 / c2;
+                    const resExp = e1 - e2;
+                    return {
+                        problema: `Calcula: (${c1} x 10^${e1}) / (${c2} x 10^${e2})`,
+                        inputHTML: `<div class="input-group"><input type="text" id="coeff"> x 10^<input type="text" id="exp"></div>`,
+                        verificar: () => {
+                            const userCoeff = parseFloat(document.getElementById('coeff').value);
+                            const userExp = parseInt(document.getElementById('exp').value);
+                            return userCoeff === resCoeff && userExp === resExp;
+                        }
+                    };
+                }
+            },
+             {
+                nombre: "Misión 5: Velocidad de la Luz",
+                generator: () => {
+                    const dist_c = 9; const dist_e = 15;
+                    const vel_c = 3; const vel_e = 8;
+                    const res_c = dist_c / vel_c;
+                    const res_e = dist_e - vel_e;
+                    return {
+                        problema: `La luz viaja a ${vel_c}x10^${vel_e} m/s. Una estrella está a ${dist_c}x10^${dist_e} m. ¿Cuántos segundos tarda en llegar la luz?`,
+                        inputHTML: `<div class="input-group"><input type="text" id="coeff"> x 10^<input type="text" id="exp"></div>`,
+                        verificar: () => {
+                             const userCoeff = parseFloat(document.getElementById('coeff').value);
+                             const userExp = parseInt(document.getElementById('exp').value);
+                             return userCoeff === res_c && userExp === res_e;
+                        }
+                    };
+                }
+            }
+        ];
+
+        let misionActual = 0;
+        let misionData = {};
+        let puntuacion = 0;
+        
+        const misionNombreDisplay = document.getElementById('mision-nombre');
+        const problemaDiv = document.getElementById('problema');
+        const inputArea = document.getElementById('input-area');
+        const feedbackDiv = document.getElementById('feedback');
+        const verificarBtn = document.getElementById('verificar-btn');
+        const siguienteBtn = document.getElementById('siguiente-btn');
+        const reiniciarBtn = document.getElementById('reiniciar-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const scoreDisplay = document.getElementById('score');
+
+        function updateInfoDisplay() {
+            scoreDisplay.textContent = `Calificación: ${puntuacion} / 10`;
+        }
+
+        function updateProgressBar() {
+            const progress = (misionActual / misiones.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function cargarMision(index) {
+            const mision = misiones[index];
+            misionData = mision.generator();
+            
+            misionNombreDisplay.textContent = mision.nombre;
+            problemaDiv.innerHTML = misionData.problema;
+            inputArea.innerHTML = misionData.inputHTML;
+            
+            feedbackDiv.textContent = 'Ingresa el coeficiente y el exponente.';
+            feedbackDiv.className = '';
+            
+            verificarBtn.style.display = 'inline-block';
+            verificarBtn.disabled = false;
+            siguienteBtn.style.display = 'none';
+            reiniciarBtn.style.display = 'none';
+
+            updateProgressBar();
+            updateInfoDisplay();
+        }
+        
+        function verificarRespuesta() {
+            const esCorrecto = misionData.verificar();
+            
+            if (esCorrecto) {
+                puntuacion += 2;
+                feedbackDiv.textContent = '¡Cálculo Cósmico Correcto!';
+                feedbackDiv.className = 'feedback-correct';
+            } else {
+                feedbackDiv.textContent = '¡Anomalía detectada! Revisa tus cálculos.';
+                feedbackDiv.className = 'feedback-incorrect';
+            }
+            
+            verificarBtn.disabled = true;
+            inputArea.querySelectorAll('input').forEach(el => el.disabled = true);
+            
+            if (misionActual < misiones.length - 1) {
+                siguienteBtn.style.display = 'inline-block';
+            } else {
+                setTimeout(() => {
+                    misionNombreDisplay.textContent = "¡Todas las misiones completadas!";
+                    problemaDiv.innerHTML = `Calificación Final: ${puntuacion} / 10. ¡Eres un/a experto/a en navegación cósmica!`;
+                    inputArea.innerHTML = '';
+                    verificarBtn.style.display = 'none';
+                    reiniciarBtn.style.display = 'inline-block';
+                    misionActual++;
+                    updateProgressBar();
+                }, 1500);
+            }
+            updateInfoDisplay();
+        }
+        
+        verificarBtn.addEventListener('click', verificarRespuesta);
+
+        inputArea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                verificarBtn.click();
+            }
+        });
+
+        siguienteBtn.addEventListener('click', () => {
+            misionActual++;
+            if (misionActual < misiones.length) {
+                cargarMision(misionActual);
+            }
+        });
+
+        reiniciarBtn.addEventListener('click', () => {
+            misionActual = 0;
+            puntuacion = 0;
+            cargarMision(misionActual);
+        });
+
+        window.onload = () => {
+            cargarMision(misionActual);
+        };
+    </script>
+</body>
+</html>
